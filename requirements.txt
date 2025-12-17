@@ -1,1 +1,4 @@
-.txt
+Flask
+psycopg2-binary
+Werkzeug
+gunicorn
