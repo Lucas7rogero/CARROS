@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGV - Gestão de Frota Digital</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        :root {
+            --primary-dark: #1a1a60;
+            --secondary-dark: #2a2a80;
+            --bg-light: #f4f7f6;
+            --accent-color: #ffffff;
+        }
+
+        body { 
+            background-color: var(--bg-light); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+        .sidebar-header { 
+            padding: 35px 20px; 
+            text-align: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            background: rgba(0,0,0,0.1);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.7);
+            padding: 18px 25px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: var(--secondary-dark);
+            color: white;
+            border-left: 5px solid var(--accent-color);
+        }
+        .sidebar .nav-link i { margin-right: 15px; width: 20px; font-size: 1.1rem; }
+
+        /* --- ÁREA PRINCIPAL --- */
+        .main-content { 
+            flex-grow: 1; 
+            padding: 40px; 
+            margin-left: 280px;
+        }
+
+        /* --- DESIGN DA PLACA (BUSCA) --- */
+        .placa-wrapper {
+            max-width: 420px;
+            margin: 50px auto;
+            background: white;
+            border: 6px solid #333;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        .placa-header {
+            background: #1a1a60;
+            color: white;
+            padding: 6px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+        #inputPlaca {
+            width: 100%;
+            border: none;
+            font-family: 'Saira Semi Condensed', sans-serif;
+            font-size: 5rem;
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            outline: none;
+            padding: 10px 0;
+            color: #111;
+        }
+
+        /* --- CARDS DA FROTA --- */
+        .card-veiculo {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .card-veiculo:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: var(--primary-dark);
+        }
+
+        /* --- ESTILO DASHBOARD/CONFIG --- */
+        .stats-card {
+            border-radius: 15px;
+            background: var(--primary-dark);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .info-label { color: #6c757d; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+        .info-value { font-weight: 700; color: #333; margin-bottom: 15px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="fw-bold mb-0 text-uppercase"><i class="fas fa-store me-2"></i>{{ nome_loja }}</h4>
+            <small class="text-white-50">SISTEMA DE GESTÃO DE FROTA</small>
+        </div>
+        <nav class="nav flex-column h-100 mt-3">
+            <a class="nav-link active" data-bs-toggle="tab" href="#abaBusca">
+                <i class="fas fa-search"></i> Buscar
+            </a>
+            <a class="nav-link" data-bs-toggle="tab" href="#abaFrota" onclick="carregarListaCarros()">
+                <i class="fas fa-car-side"></i> Veículos
+            </a>
+            <a class="nav-link" data-bs-toggle="tab" href="#abaConfig" onclick="carregarPerfil()">
+                <i class="fas fa-cog"></i> Configurar
+            </a>
+            <a href="/logout" class="nav-link mt-auto text-danger mb-4">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="tab-content">
+            
+            <div class="tab-pane fade show active" id="abaBusca">
+                <div class="text-center pt-5">
+                    <h2 class="fw-bold text-dark mb-4">Consulta de Veículo</h2>
+                    <div class="placa-wrapper">
+                        <div class="placa-header">
+                            <span>BRASIL</span>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Flag_of_Brazil.svg" width="25" alt="BR">
+                        </div>
+                        <input type="text" id="inputPlaca" placeholder="ABC1D23" maxlength="7">
+                    </div>
+                    <button class="btn btn-dark btn-lg px-5 rounded-pill shadow-lg mt-3" onclick="handleCarSearch()">
+                        <i class="fas fa-search me-2"></i>Buscar
+                    </button>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="abaFrota">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold text-dark">Veículos</h3>
+                    <button class="btn btn-primary px-4 rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#modalAddCar">
+                        <i class="fas fa-plus me-2"></i>Adicionar
+                    </button>
+                </div>
+                <div class="row g-4" id="listaCarrosExistentes"></div>
+            </div>
+
+            <div class="tab-pane fade" id="abaConfig">
+                <h3 class="fw-bold mb-4">Configurações da Conta</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 15px;">
+                            <h5 class="fw-bold text-primary mb-4"><i class="fas fa-user-circle me-2"></i>Informações do Gestor</h5>
+                            
+                            <div class="mb-3">
+                                <span class="info-label">Nome Completo</span>
+                                <div class="info-value" id="perfilNome">---</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="info-label">E-mail de Acesso</span>
+                                <div class="info-value" id="perfilEmail">---</div>
+                            </div>
+
+                            <div class="mb-0">
+                                <span class="info-label">Nome da Unidade/Loja</span>
+                                <div class="info-value" id="perfilLoja">---</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stats-card shadow-lg mb-4">
+                            <i class="fas fa-car-side fa-3x mb-3 text-white-50"></i>
+                            <h5 class="fw-bold opacity-75">Veículos na Frota</h5>
+                            <h1 id="perfilTotalVeiculos" class="display-2 fw-bold">0</h1>
+                        </div>
+                        <button class="btn btn-outline-danger w-100 rounded-pill" onclick="confirmarExclusaoConta()">
+                            <i class="fas fa-user-times me-2"></i>Solicitar Exclusão de Conta
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAddCar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">Cadastrar Veículo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="addCarForm">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Placa</label>
+                            <input type="text" name="placa" class="form-control text-uppercase" required maxlength="7">
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6"><input type="text" name="marca" class="form-control" placeholder="Marca"></div>
+                            <div class="col-6"><input type="text" name="modelo" class="form-control" placeholder="Modelo" required></div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6"><input type="number" name="ano" class="form-control" placeholder="Ano"></div>
+                            <div class="col-6"><input type="text" name="cor" class="form-control" placeholder="Cor"></div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">Anexo Inicial</label>
+                            <input type="file" name="file" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">SALVAR</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDetalhesVeiculo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg" style="border-radius: 20px;">
+                <div class="modal-header bg-dark text-white" style="border-radius: 20px 20px 0 0;">
+                    <h5 class="modal-title fw-bold">Gestão do Veículo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-md-5 border-end">
+                            <div class="bg-light p-3 rounded text-center border mb-4">
+                                <h1 id="detalhePlaca" class="fw-bold mb-0" style="font-family: 'Saira Semi Condensed';"></h1>
+                            </div>
+                            <div class="mb-3"><span class="info-label">Modelo</span><div class="fw-bold" id="detalheMarcaModelo"></div></div>
+                            <div class="row">
+                                <div class="col-6"><span class="info-label">Ano</span><div id="detalheAno"></div></div>
+                                <div class="col-6"><span class="info-label">Cor</span><div id="detalheCor"></div></div>
+                            </div>
+                        </div>
+                        <div class="col-md-7 ps-md-4">
+                            <h6 class="fw-bold text-primary mb-3">Documentos</h6>
+                            <div id="detalheListaAnexos" class="mb-3 border rounded bg-light p-2" style="max-height: 150px; overflow-y: auto;"></div>
+                            <form id="uploadModalForm" class="p-3 bg-light border rounded">
+                                <input type="hidden" name="carro_id" id="detalheCarroId">
+                                <input type="text" name="nome_documento" class="form-control form-control-sm mb-2" placeholder="Nome do arquivo" required>
+                                <div class="input-group input-group-sm">
+                                    <input type="file" name="file" class="form-control" required>
+                                    <button class="btn btn-success" type="submit">ANEXAR</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
